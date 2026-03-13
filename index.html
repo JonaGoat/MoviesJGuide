@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title> GuideMovies</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg" id="bg"></div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand__title">GuideMovies</div>
+    </div>
+
+    <div class="searchWrap">
+      <input id="searchInput" class="search" placeholder="Buscar por título, año, fase, héroe..." />
+    </div>
+
+    <div class="orderSwitch">
+      <div class="orderSwitch__label">Orden</div>
+
+      <button id="orderSwitchBtn" class="switch" type="button" aria-label="Cambiar orden">
+        <div class="switch__track">
+          <div class="switch__knob"></div>
+        </div>
+        <div class="switch__text">
+          <span id="switchLeft" class="switch__opt">Cronológico</span>
+          <span id="switchRight" class="switch__opt">Lanzamiento</span>
+        </div>
+      </button>
+    </div>
+
+    <div class="menu">
+      <button id="filtersBtn" class="menuBtn menuBtn--pill" type="button" aria-expanded="false">
+        Filtros <span class="caret">▾</span>
+      </button>
+
+      <div id="filtersPanel" class="menuPanel" role="dialog" aria-label="Filtros">
+        <div class="panelRow">
+          <div class="panelLabel">Lista</div>
+          <select id="listModeSelect" class="panelControl">
+            <option value="all">Todas</option>
+            <option value="favorites">Favoritos</option>
+          </select>
+        </div>
+
+        <div class="panelRow">
+          <div class="panelLabel">Género</div>
+          <select id="genreSelect" class="panelControl"></select>
+        </div>
+
+        <div class="panelRow">
+          <div class="panelLabel">Fase</div>
+          <select id="phaseSelect" class="panelControl"></select>
+        </div>
+
+        <div class="panelRow panelRow--actions">
+          <button id="timelineBtn" class="btn btn--chip" type="button">Timeline</button>
+          <button id="resetBtn" class="btn btn--chip btn--danger" type="button">Reset</button>
+        </div>
+
+        <div class="panelRow panelRow--actions">
+          <button id="playlistsBtn" class="btn btn--secondary" type="button">Playlists</button>
+        </div>
+
+        <div class="panelHelp">
+          Tip: En la Timeline puedes marcar varias fases. Volver a clickear una fase la desmarca.
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- LAYOUT -->
+  <main class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar soft-scroll" id="sidebar">
+      <div class="sidebarHead">
+        <div class="sidebarTitle" id="sidebarTitle">Todas</div>
+        <div class="sidebarSub" id="sidebarSub">Click en una película para verla.</div>
+
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button id="backToAllBtn" class="btn btn--chip is-hidden" type="button">← Volver</button>
+          <button id="newPlaylistSidebarBtn" class="btn btn--chip is-hidden" type="button">+ Nueva</button>
+        </div>
+      </div>
+
+      <div id="movieList" class="list soft-scroll"></div>
+    </aside>
+
+    <!-- DETAIL -->
+    <section class="detail soft-scroll" id="detail">
+      <div class="hero" id="hero">
+        <img id="detailBanner" class="heroBanner" alt="banner" />
+        <div class="heroShade"></div>
+      </div>
+
+      <div class="metaLine">
+        <span id="detailGenres"></span>
+        <span class="dot">•</span>
+        <span>Runtime: <b id="detailRuntime">—</b></span>
+        <span class="dot">•</span>
+        <span><span class="star">★</span> <b id="detailRating">—</b></span>
+      </div>
+
+      <div class="titleRow">
+        <h1 class="detailTitle" id="detailTitle">—</h1>
+
+        <button id="favBigBtn" class="iconBtn" type="button" title="Favorito">
+          <span id="favBigIcon">☆</span>
+        </button>
+      </div>
+
+      <div class="year" id="detailYear">—</div>
+
+      <p class="desc" id="detailDesc">—</p>
+
+      <div class="actions">
+        <a id="trailerBtn" class="btn btn--primary" href="#" target="_blank" rel="noreferrer">Ver trailer</a>
+        <button id="listBtn" class="btn btn--secondary" type="button">Agregar a playlist</button>
+        <button id="removeFromListBtn" class="btn btn--ghost is-hidden" type="button">Quitar de playlist</button>
+      </div>
+
+      <!-- RECO -->
+      <div class="reco" id="recoSection">
+        <div class="recoHead">
+          <h3 class="recoTitle" id="recoTitle">Sigue…</h3>
+          <div class="recoArrows">
+            <button id="recoPrev" class="arrowBtn" type="button">‹</button>
+            <button id="recoNext" class="arrowBtn" type="button">›</button>
+          </div>
+        </div>
+        <div id="recoRow" class="recoRow soft-scroll"></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <!-- TIMELINE -->
+      <section class="timeline" id="timeline">
+        <div class="timelineHead">
+          <h2>Timeline por Fase</h2>
+          <p>Marca una o varias fases para ver su lista debajo.</p>
+        </div>
+
+        <div id="timelineGrid" class="timelineGrid"></div>
+
+        <!-- columna debajo del grid -->
+        <div id="timelineList" class="timelineList"></div>
+      </section>
+
+      <div class="spacer"></div>
+    </section>
+  </main>
+
+  <!-- MODAL PLAYLIST -->
+  <div id="playlistModal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="1"></div>
+    <div class="modal__panel" role="dialog" aria-label="Agregar a playlist">
+      <div class="modal__head">
+        <div class="modal__title">Playlists</div>
+        <button class="modal__x" type="button" data-close="1">✕</button>
+      </div>
+
+      <div class="modal__sub" id="playlistModalSub">Elige una playlist</div>
+
+      <div class="modal__row">
+        <select id="playlistPickSelect" class="panelControl"></select>
+        <button id="playlistConfirmAdd" class="btn btn--primary" type="button">Agregar</button>
+      </div>
+
+      <div class="modal__divider"></div>
+
+      <div class="modal__row">
+        <input id="playlistNewName" class="panelControl" placeholder="Nombre nueva playlist..." />
+        <button id="playlistCreateAndPick" class="btn btn--secondary" type="button">Crear + Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Ok</div>
+
+  <script src="app.js"></script>
+  <button id="toTopBtn" class="toTopBtn" type="button" title="Subir">↑</button>
+</body>
+</html>
