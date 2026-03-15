@@ -75,13 +75,19 @@ body{
   border-bottom: 1px solid var(--stroke);
 }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding-right:6px;
-  min-width: 170px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+
+.brand__logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .brand__title{
   font-weight:800;
   letter-spacing:.2px;
