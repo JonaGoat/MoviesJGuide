@@ -430,6 +430,104 @@ function setupAutoSidebar(){
 }
 
 /* =========================
+   MOBILE TOPBAR COMPACT
+========================= */
+function setupMobileTopbarAutoHide(){
+  const topbar = document.querySelector(".topbar");
+  const filtersPanel = $("filtersPanel");
+  const detail = $("detail");
+  const movieList = $("movieList");
+  const sidebar = $("sidebar");
+
+  if(!topbar) return;
+
+  let ticking = false;
+
+  function panelOpen(){
+  return !!filtersPanel?.classList.contains("is-open");
+}
+
+
+  function getScrollValue(el){
+    if(!el) return 0;
+    return el.scrollTop || 0;
+  }
+
+  function getCurrentY(){
+    return Math.max(
+      window.scrollY || 0,
+      document.documentElement.scrollTop || 0,
+      document.body.scrollTop || 0,
+      getScrollValue(detail),
+      getScrollValue(movieList),
+      getScrollValue(sidebar)
+    );
+  }
+
+  function applyCompactState(){
+    if(!isMobileViewport()){
+      topbar.classList.remove("is-compact");
+      return;
+    }
+
+    if(panelOpen()){
+  topbar.classList.remove("is-compact");
+  return;
+}
+
+
+    const y = getCurrentY();
+
+    if(y > 70){
+      topbar.classList.add("is-compact");
+    }else{
+      topbar.classList.remove("is-compact");
+    }
+  }
+
+  function onScroll(){
+    if(ticking) return;
+    ticking = true;
+
+    requestAnimationFrame(() => {
+      ticking = false;
+      applyCompactState();
+    });
+  }
+
+  const targets = [
+    window,
+    document,
+    document.documentElement,
+    document.body,
+    detail,
+    movieList,
+    sidebar
+  ].filter(Boolean);
+
+  targets.forEach(target => {
+    target.addEventListener("scroll", onScroll, { passive: true });
+    target.addEventListener("touchmove", onScroll, { passive: true });
+  });
+
+  window.addEventListener("resize", onScroll);
+
+  document.addEventListener("click", () => {
+    requestAnimationFrame(applyCompactState);
+  });
+
+  setTimeout(applyCompactState, 100);
+}
+
+
+
+
+/* temporal para prueba manual en consola */
+window.testCompactTopbar = function () {
+  document.querySelector(".topbar")?.classList.toggle("is-compact");
+};
+
+/* =========================
    TMDb helpers
 ========================= */
 function tmdbEnabled(){
@@ -645,6 +743,8 @@ async function warmupRatings(){
 function setupMenus(){
   const btn = $("filtersBtn");
   const panel = $("filtersPanel");
+  const topbar = document.querySelector(".topbar");
+
   if(!btn || !panel) return;
 
   function close(){
@@ -652,11 +752,27 @@ function setupMenus(){
     btn.setAttribute("aria-expanded","false");
   }
 
+  function open(){
+    if(isMobileViewport() && topbar){
+      topbar.classList.remove("is-compact");
+    }
+
+    panel.classList.add("is-open");
+    btn.setAttribute("aria-expanded","true");
+  }
+
   btn.addEventListener("click", (e)=>{
     e.stopPropagation();
     e.preventDefault();
-    const open = panel.classList.toggle("is-open");
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
+
+    const isOpen = panel.classList.contains("is-open");
+
+    if(isOpen){
+      close();
+      return;
+    }
+
+    open();
   });
 
   panel.addEventListener("click", (e)=> e.stopPropagation());
@@ -671,6 +787,7 @@ function setupMenus(){
     if(e.key === "Escape") close();
   });
 }
+
 
 /* =========================
    Orden switch
@@ -1311,6 +1428,8 @@ function renderListCard(m){
   favBtn.type = "button";
   favBtn.title = isFav(m.id) ? "Quitar de favoritos" : "Agregar a favoritos";
   favBtn.innerHTML = `<span>${isFav(m.id) ? "★" : "☆"}</span>`;
+  favBtn.classList.toggle("is-active", isFav(m.id));
+
   favBtn.addEventListener("click", (e)=>{
     e.stopPropagation();
     toggleFav(m.id);
@@ -1457,6 +1576,7 @@ async function renderDetail(animate=false){
 
   if($("favBigIcon")) $("favBigIcon").textContent = isFav(m.id) ? "★" : "☆";
   if($("favBigBtn")){
+    $("favBigBtn").classList.toggle("is-active", isFav(m.id));
     $("favBigBtn").onclick = ()=>{
       toggleFav(m.id);
       renderSidebar();
@@ -1697,6 +1817,7 @@ function init(){
   setupMenus();
   setupOrderSwitch();
   setupPlaylistModal();
+  setupMobileTopbarAutoHide();
 
   hydrateFilterOptions();
   setupHeaderControls();
