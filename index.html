@@ -51,7 +51,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/logo_32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="images/logo_16x16.png" />
-
+  <link rel="canonical" href="https://jonagoat.github.io/MoviesJGuide/" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -159,7 +159,7 @@
       <div class="titleRow">
         <h1 class="detailTitle" id="detailTitle">—</h1>
 
-        <button id="favBigBtn" class="iconBtn" type="button" title="Favorito">
+        <button id="favBigBtn" class="iconBtn" type="button" title="Favorito" aria-label="Marcar como favorito">
           <span id="favBigIcon">☆</span>
         </button>
       </div>
@@ -179,8 +179,8 @@
         <div class="recoHead">
           <h3 class="recoTitle" id="recoTitle">Sigue…</h3>
           <div class="recoArrows">
-            <button id="recoPrev" class="arrowBtn" type="button">‹</button>
-            <button id="recoNext" class="arrowBtn" type="button">›</button>
+            <button id="recoPrev" class="arrowBtn" type="button" aria-label="Películas anteriores">‹</button>
+            <button id="recoNext" class="arrowBtn" type="button" aria-label="Películas siguientes">›</button>
           </div>
         </div>
         <div id="recoRow" class="recoRow soft-scroll"></div>
@@ -233,6 +233,6 @@
   <div id="toast" class="toast">Ok</div>
 
   <script src="app.js"></script>
-  <button id="toTopBtn" class="toTopBtn" type="button" title="Subir">↑</button>
+  <button id="toTopBtn" class="toTopBtn" type="button" title="Subir" aria-label="Volver arriba">↑</button>
 </body>
 </html>
