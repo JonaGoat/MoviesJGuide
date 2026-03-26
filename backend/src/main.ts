@@ -6,17 +6,24 @@ import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.enableCors({
-    origin: ["http://localhost:3000"],
-    credentials: true
+    origin: [
+      "http://localhost:3000",
+      "https://TU-FRONTEND.vercel.app"
+    ],
+    credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  app.useGlobalPipes(
+    new ValidationPipe({ whitelist: true, transform: true })
+  );
 
   const port = process.env.PORT ? Number(process.env.PORT) : 4000;
-  await app.listen(port, '0.0.0.0');
+  await app.listen(port, "0.0.0.0");
 
-  // eslint-disable-next-line no-console
-  console.log(`API running on http://localhost:${port}`);
+  console.log(`API running on port ${port}`);
 }
+
 
 bootstrap();
