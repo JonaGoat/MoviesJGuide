@@ -1,10 +1,14 @@
 ﻿import { Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { TmdbService } from "../tmdb/tmdb.service";
 
 @Injectable()
 export class MoviesService {
-  constructor(private readonly prisma: PrismaService, private readonly tmdb: TmdbService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tmdb: TmdbService
+  ) {}
 
   private mapMovie(movie: any) {
     return {
@@ -51,7 +55,10 @@ export class MoviesService {
       where.phase = { name: params.phase };
     }
 
-    const orderBy = params.order === "release" ? { releaseOrder: "asc" } : { chronoOrder: "asc" };
+    const orderBy: Prisma.MovieOrderByWithRelationInput =
+      params.order === "release"
+        ? { releaseOrder: Prisma.SortOrder.asc }
+        : { chronoOrder: Prisma.SortOrder.asc };
 
     const movies = await this.prisma.movie.findMany({
       where,
@@ -70,6 +77,7 @@ export class MoviesService {
       where: { id },
       include: { phase: true, genres: { include: { genre: true } } }
     });
+
     if (!movie) throw new NotFoundException("Movie not found");
 
     if (!movie.runtime || !movie.description || movie.rating == null) {
@@ -80,6 +88,7 @@ export class MoviesService {
       where: { id },
       include: { phase: true, genres: { include: { genre: true } } }
     });
+
     return this.mapMovie(fresh || movie);
   }
 
@@ -87,7 +96,10 @@ export class MoviesService {
     const base = await this.prisma.movie.findUnique({ where: { id } });
     if (!base) throw new NotFoundException("Movie not found");
 
-    const all = await this.prisma.movie.findMany({ orderBy: { chronoOrder: "asc" } });
+    const all = await this.prisma.movie.findMany({
+      orderBy: { chronoOrder: Prisma.SortOrder.asc }
+    });
+
     const byChrono = [...all].sort((a, b) => (a.chronoOrder ?? 9999) - (b.chronoOrder ?? 9999));
     const byRelease = [...all].sort((a, b) => (a.releaseOrder ?? 9999) - (b.releaseOrder ?? 9999));
 
@@ -95,13 +107,18 @@ export class MoviesService {
 
     const neighbors = (arr: typeof all) => {
       const idx = arr.findIndex((m) => m.id === base.id);
-      return [idx > 0 ? arr[idx - 1] : null, idx >= 0 && idx < arr.length - 1 ? arr[idx + 1] : null].filter(Boolean);
+      const result = [
+        idx > 0 ? arr[idx - 1] : null,
+        idx >= 0 && idx < arr.length - 1 ? arr[idx + 1] : null,
+      ];
+      return result.filter((m): m is (typeof all)[number] => m !== null);
     };
 
     const extras = [...neighbors(byChrono), ...neighbors(byRelease)];
     const ids = new Set<string>();
+
     const merged = [...sameHero, ...extras].filter((m) => {
-      if (!m || ids.has(m.id)) return false;
+      if (ids.has(m.id)) return false;
       ids.add(m.id);
       return true;
     });
@@ -126,6 +143,7 @@ export class MoviesService {
       }
 
       if (!tmdbId) return;
+
       const details = await this.tmdb.getMovieDetails(tmdbId);
       if (!details) return;
 
