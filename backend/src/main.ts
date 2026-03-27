@@ -10,7 +10,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       "http://localhost:3000",
-      "https://TU-FRONTEND.vercel.app"
+      "https://movies-j-guide.vercel.app",
+      /\.vercel\.app$/,
     ],
     credentials: true,
   });
@@ -24,6 +25,5 @@ async function bootstrap() {
 
   console.log(`API running on port ${port}`);
 }
-
 
 bootstrap();
