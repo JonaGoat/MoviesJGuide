@@ -7,13 +7,21 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const originEnv = process.env.FRONTEND_ORIGIN || "";
+  const originList = originEnv
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: [
-      "http://localhost:3000",
-      "https://movies-j-guide.vercel.app",
-      /\.vercel\.app$/,
-    ],
-    credentials: true,
+    origin: originList.length
+      ? originList
+      : [
+          "http://localhost:3000",
+          "https://movies-j-guide.vercel.app",
+          /\.vercel\.app$/,
+        ],
+    credentials: false,
   });
 
   app.useGlobalPipes(

@@ -62,6 +62,8 @@ export default function HomePage() {
   const [movies, setMovies] = useState<MovieListItem[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieDetailType | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [moviesLoading, setMoviesLoading] = useState(false);
+  const [moviesError, setMoviesError] = useState<string>("");
   const [genres, setGenres] = useState<string[]>([]);
   const [phases, setPhases] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -100,15 +102,30 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    setMoviesLoading(true);
+    setMoviesError("");
     api
       .getMovies({ search: appState.search, order: appState.orderMode })
       .then((data: MovieListItem[]) => {
+        if (cancelled) return;
         setMovies(data);
         if (!appState.selectedId && data.length) {
           setAppState((prev) => ({ ...prev, selectedId: data[0].id }));
         }
       })
-      .catch(() => setMovies([]));
+      .catch((err) => {
+        if (cancelled) return;
+        setMovies([]);
+        setMoviesError(err instanceof Error ? err.message : "No se pudo cargar peliculas");
+        console.error("getMovies error:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setMoviesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [appState.search, appState.orderMode]);
 
   useEffect(() => {
@@ -470,6 +487,14 @@ export default function HomePage() {
         ? "Orden segun vas agregando."
         : "Click en una pelicula para verla.";
 
+  const effectiveSubtitle = listStatusMessage || sidebarSubtitle;
+
+  const listStatusMessage = moviesLoading
+    ? "Cargando peliculas..."
+    : moviesError
+      ? `Error al cargar: ${moviesError}`
+      : "";
+
   const recoTitle = selectedMovie ? `Sigue con ${heroLabel(selectedMovie.heroKey)}...` : "Sigue...";
   const inActivePlaylist = appState.listMode === "playlist" && selectedMovie
     ? playlistItems.some((i) => i.movieId === selectedMovie.id)
@@ -539,7 +564,7 @@ export default function HomePage() {
         <Sidebar
           view={appState.sidebarView}
           title={sidebarTitle}
-          subtitle={sidebarSubtitle}
+          subtitle={effectiveSubtitle}
           movies={filteredMovies}
           selectedId={appState.selectedId}
           favorites={favorites}
