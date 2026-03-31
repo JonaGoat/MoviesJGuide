@@ -105,6 +105,7 @@ export default function HomePage() {
     let cancelled = false;
     setMoviesLoading(true);
     setMoviesError("");
+
     api
       .getMovies({ search: appState.search, order: appState.orderMode })
       .then((data: MovieListItem[]) => {
@@ -123,6 +124,7 @@ export default function HomePage() {
       .finally(() => {
         if (!cancelled) setMoviesLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
@@ -133,10 +135,12 @@ export default function HomePage() {
       setSelectedMovie(null);
       return;
     }
+
     const summary = movies.find((m) => m.id === appState.selectedId) || null;
     if (summary) {
       setSelectedMovie(summary);
     }
+
     setDetailLoading(true);
     api
       .getMovie(appState.selectedId)
@@ -145,10 +149,11 @@ export default function HomePage() {
         // keep summary if available
       })
       .finally(() => setDetailLoading(false));
-  }, [appState.selectedId]);
+  }, [appState.selectedId, movies]);
 
   useEffect(() => {
     if (!deviceId) return;
+
     api
       .getFavorites(deviceId)
       .then((data) => setFavorites(new Set(data.map((f: { movieId: string }) => f.movieId))))
@@ -170,7 +175,9 @@ export default function HomePage() {
       setPlaylistCovers({});
       return;
     }
+
     let cancelled = false;
+
     const loadCovers = async () => {
       const entries = await Promise.all(
         playlists.map(async (pl) => {
@@ -185,14 +192,18 @@ export default function HomePage() {
           }
         })
       );
+
       if (cancelled) return;
+
       const map: Record<string, string | null> = {};
       entries.forEach(([id, cover]) => {
         map[id] = cover;
       });
       setPlaylistCovers(map);
     };
+
     loadCovers();
+
     return () => {
       cancelled = true;
     };
@@ -205,6 +216,7 @@ export default function HomePage() {
       setPlaylistItems([]);
       return;
     }
+
     api
       .getPlaylistItems(deviceId, playlistId)
       .then((items: PlaylistItem[]) => setPlaylistItems(items))
@@ -213,6 +225,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!appState.selectedId) return;
+
     api
       .getRecommendations(appState.selectedId)
       .then((data: MovieListItem[]) => setReco(data))
@@ -265,6 +278,7 @@ export default function HomePage() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     window.addEventListener("touchmove", onScroll, { passive: true });
+
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
@@ -278,6 +292,7 @@ export default function HomePage() {
     if (!movie) return;
     const bg = document.getElementById("bg");
     if (!bg) return;
+
     bg.style.background = `radial-gradient(900px 600px at 20% 15%, ${movie.color}29, transparent 60%),
       radial-gradient(900px 700px at 85% 20%, rgba(80,130,255,.12), transparent 55%),
       linear-gradient(180deg, rgba(5,6,10,.2), rgba(5,6,10,.6))`;
@@ -336,6 +351,7 @@ export default function HomePage() {
   const handleToggleFavorite = async (movieId: string) => {
     if (!deviceId) return;
     const isFav = favorites.has(movieId);
+
     try {
       if (isFav) {
         await api.removeFavorite(deviceId, movieId);
@@ -344,8 +360,10 @@ export default function HomePage() {
         await api.addFavorite(deviceId, movieId);
         setToastMsg("Agregado a favoritos");
       }
+
       const next = new Set(favorites);
-      if (isFav) next.delete(movieId); else next.add(movieId);
+      if (isFav) next.delete(movieId);
+      else next.add(movieId);
       setFavorites(next);
     } catch {
       setToastMsg("No se pudo actualizar favoritos");
@@ -359,11 +377,13 @@ export default function HomePage() {
 
   const handleAddToPlaylist = async (playlistId: string) => {
     if (!deviceId || !pendingMovieId) return;
+
     await api.addPlaylistItem(deviceId, playlistId, pendingMovieId);
     setToastMsg("Agregado a playlist");
     setPlaylistModalOpen(false);
     setPendingMovieId(null);
     setAppState((prev) => ({ ...prev, activePlaylistId: playlistId }));
+
     const items = await api.getPlaylistItems(deviceId, playlistId);
     setPlaylistItems(items as PlaylistItem[]);
     const refreshed = await api.getPlaylists(deviceId);
@@ -372,6 +392,7 @@ export default function HomePage() {
 
   const handleCreatePlaylistAndAdd = async (name: string) => {
     if (!deviceId || !pendingMovieId) return;
+
     const pl = await api.createPlaylist(deviceId, name);
     setPlaylists((prev) => [pl, ...prev]);
     await api.addPlaylistItem(deviceId, pl.id, pendingMovieId);
@@ -379,6 +400,7 @@ export default function HomePage() {
     setPlaylistModalOpen(false);
     setPendingMovieId(null);
     setAppState((prev) => ({ ...prev, activePlaylistId: pl.id }));
+
     const items = await api.getPlaylistItems(deviceId, pl.id);
     setPlaylistItems(items as PlaylistItem[]);
     const refreshed = await api.getPlaylists(deviceId);
@@ -387,8 +409,10 @@ export default function HomePage() {
 
   const handleRemoveFromPlaylist = async (movieId: string) => {
     if (!deviceId || !appState.activePlaylistId) return;
+
     await api.removePlaylistItem(deviceId, appState.activePlaylistId, movieId);
     setToastMsg("Quitado de la playlist");
+
     const items = await api.getPlaylistItems(deviceId, appState.activePlaylistId);
     setPlaylistItems(items as PlaylistItem[]);
     const refreshed = await api.getPlaylists(deviceId);
@@ -398,6 +422,7 @@ export default function HomePage() {
   const handleSelectPlaylist = async (id: string) => {
     setAppState((prev) => ({ ...prev, listMode: "playlist", sidebarView: "movies", activePlaylistId: id }));
     if (!deviceId) return;
+
     const items = await api.getPlaylistItems(deviceId, id);
     setPlaylistItems(items as PlaylistItem[]);
     setToastMsg("Viendo playlist");
@@ -408,6 +433,7 @@ export default function HomePage() {
     const current = playlists.find((p) => p.id === id);
     const name = window.prompt("Nuevo nombre:", current?.name || "");
     if (!name) return;
+
     await api.updatePlaylist(deviceId, id, name);
     setPlaylists((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
     setToastMsg("Playlist renombrada");
@@ -417,15 +443,19 @@ export default function HomePage() {
     if (!deviceId) return;
     const current = playlists.find((p) => p.id === id);
     if (!current) return;
+
     const ok = window.confirm(`Borrar playlist "${current.name}"?`);
     if (!ok) return;
+
     await api.deletePlaylist(deviceId, id);
     const next = playlists.filter((p) => p.id !== id);
     setPlaylists(next);
     setToastMsg("Playlist borrada");
+
     if (appState.activePlaylistId === id) {
       setAppState((prev) => ({ ...prev, activePlaylistId: null, listMode: "all" }));
     }
+
     if (!next.length && appState.listMode === "playlist") {
       setAppState((prev) => ({ ...prev, listMode: "all" }));
     }
@@ -435,6 +465,7 @@ export default function HomePage() {
     if (!deviceId) return;
     const name = window.prompt("Nombre de la nueva playlist:");
     if (!name) return;
+
     const pl = await api.createPlaylist(deviceId, name);
     setPlaylists((prev) => [pl, ...prev]);
     setToastMsg("Playlist creada");
@@ -458,6 +489,7 @@ export default function HomePage() {
       const next = prev.selectedPhases.includes(phase)
         ? prev.selectedPhases.filter((p) => p !== phase)
         : [...prev.selectedPhases, phase];
+
       return {
         ...prev,
         selectedPhases: next,
@@ -487,13 +519,13 @@ export default function HomePage() {
         ? "Orden segun vas agregando."
         : "Click en una pelicula para verla.";
 
-  const effectiveSubtitle = listStatusMessage || sidebarSubtitle;
-
   const listStatusMessage = moviesLoading
     ? "Cargando peliculas..."
     : moviesError
       ? `Error al cargar: ${moviesError}`
       : "";
+
+  const effectiveSubtitle = listStatusMessage || sidebarSubtitle;
 
   const recoTitle = selectedMovie ? `Sigue con ${heroLabel(selectedMovie.heroKey)}...` : "Sigue...";
   const inActivePlaylist = appState.listMode === "playlist" && selectedMovie
